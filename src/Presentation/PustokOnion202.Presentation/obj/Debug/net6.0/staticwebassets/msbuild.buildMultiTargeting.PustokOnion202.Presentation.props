@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\PustokOnion202.Presentation.props" />
+</Project>
