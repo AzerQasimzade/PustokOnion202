@@ -72,26 +72,6 @@ namespace PustokOnion202.Persistence.Implementations.Repositories
             T tag = await _table.FirstOrDefaultAsync(c => c.Id == id);
             return tag;
         }
-        public async Task CreateAsync(CreateBookDto dto)
-        {
-            if (await _repository.IsExistAsync(p => p.Name == dto.Name)) throw new Exception($"there is a product with the same {dto.Name}");
-            if (!await _categoryRepository.IsExistAsync(c => c.Id == dto.CategoryId)) throw new Exception("The product you are looking for is no longer available");
-
-            Book product = _mapper.Map<Product>(dto);
-
-            product.ProductColors = new List<ProductColor>();
-
-            if (dto.ColorIds is not null)
-            {
-                foreach (var colId in dto.ColorIds)
-                {
-                    if (!await _colorRepository.IsExistAsync(c => c.Id == colId)) throw new Exception($"Could not find {colId}");
-                    product.ProductColors.Add(new ProductColor { ColorId = colId });
-                }
-            }
-            await _repository.AddAsync(product);
-            await _repository.SaveChangesAsync();
-        }
         public async Task AddAsync(T tag)
         {
             await _table.AddAsync(tag);

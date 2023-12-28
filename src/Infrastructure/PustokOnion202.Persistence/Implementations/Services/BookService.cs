@@ -16,12 +16,14 @@ namespace PustokOnion202.Persistence.Implementations.Services
     {
         private readonly IBookRepository _repository;
         private readonly IGenreRepository _genreRepository;
+        private readonly ITagRepository _tagRepository;
         private readonly IMapper _mapper;
 
-        public BookService(IBookRepository repository, IGenreRepository genreRepository, IMapper mapper)
+        public BookService(IBookRepository repository, IGenreRepository genreRepository, ITagRepository tagRepository, IMapper mapper)
         {
             _repository = repository;
             _genreRepository = genreRepository;
+            _tagRepository = tagRepository;
             _mapper = mapper;
         }
         public async Task<IEnumerable<BookItemDto>> GetAllAsync(int page, int take)
@@ -36,10 +38,23 @@ namespace PustokOnion202.Persistence.Implementations.Services
         }
         public async Task CreateAsync(CreateBookDto dto)
         {
-            if (await _repository.IsExistAsync(p => p.Name == dto.Name)) throw new Exception($"there is a product with the same {dto.Name}");
-            if (!await _genreRepository.IsExistAsync(c => c.Id == dto.CategoryId)) throw new Exception("The product you are looking for is no longer available");
+            if (await _repository.IsExistAsync(b => b.Name == dto.Name)) throw new Exception($"there is a book with the same {dto.Name}");
+            if (!await _genreRepository.IsExistAsync(g => g.Id == dto.GenreId)) throw new Exception("The book you are looking for is no longer available");
 
             Book book = _mapper.Map<Book>(dto);
+
+            book.BookTags = new List<BookTag>();
+
+            if (dto.TagIds is not null)
+            {
+                foreach (var tagId in dto.TagIds)
+                {
+                    if (!await _tagRepository.IsExistAsync(t => t.Id == tagId)) throw new Exception($"Could not find {tagId}");
+                    book.BookTags.Add(new BookTag { TagId = tagId });
+                }
+            }
+            await _repository.AddAsync(book);
+            await _repository.SaveChangesAsync();
         }
     }
 }
